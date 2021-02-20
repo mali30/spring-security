@@ -3,6 +3,7 @@ package com.spring.security.tutorial.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+import static com.spring.security.tutorial.security.Roles.ADMIN;
+import static com.spring.security.tutorial.security.Roles.STUDENT;
 
 @Configuration
 @EnableWebSecurity
@@ -37,8 +41,9 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
 //                allow all users to see the following matchers
-                .antMatchers("/", "/index", "/css/*", "/js/*")
-                .permitAll()
+                .antMatchers("/", "/index", "/css/*", "/js/*").permitAll()
+//                will protect api student api so that you must have the student roles to access
+                .antMatchers("/api/**").hasRole(STUDENT.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -54,9 +59,15 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         UserDetails moeUser =  User.builder()
                 .username("moe")
                 .password(passwordEncoder.encode("password"))
-                .roles("STUDENT") // ROLE_STUDENT -> how spring will rename
+                .roles(STUDENT.name()) // ROLE_STUDENT -> how spring will rename
                 .build();
 
-        return new InMemoryUserDetailsManager(moeUser);
+        UserDetails johnnyUser = User.builder()
+                .username("johnny")
+                .password(passwordEncoder.encode("password"))
+                .roles(ADMIN.name())
+                .build();
+
+        return new InMemoryUserDetailsManager(moeUser, johnnyUser);
     }
 }
