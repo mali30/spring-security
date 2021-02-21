@@ -46,17 +46,18 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
 //                allow all users to see the following matchers
                 .antMatchers("/", "/index", "/css/*", "/js/*").permitAll()
-//                will protect api student api so that you must have the student roles to access
-//                .antMatchers("/api/**").hasAnyRole(
-//                        STUDENT.name(),
-//                        ADMIN.name(),
-//                        ADMIN_TRAINEE.name()
-//        )
+//                will protect student api so that you must have the student roles to access
+                .antMatchers("/api/v1/students/**").hasAnyRole(
+                        STUDENT.name(),
+                        ADMIN.name(),
+                        ADMIN_TRAINEE.name()
+        )
 //                permission(authority) based authentication
                 .antMatchers(HttpMethod.GET, "/api/v1/management/students").hasAnyRole(ADMIN.name(), ADMIN_TRAINEE.name())
-                .antMatchers(HttpMethod.PUT, "/api/v1/management/students").hasAuthority(COURSE_WRITE.name())
-                .antMatchers(HttpMethod.POST, "/api/v1/management/students").hasAuthority(COURSE_WRITE.name())
-                .antMatchers(HttpMethod.DELETE, "/api/v1/management/students").hasAuthority(COURSE_WRITE.name())
+                .antMatchers(HttpMethod.PUT, "/api/v1/management/students").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.POST, "/api/v1/management/students").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.DELETE, "/api/v1/management/students/**").hasAuthority(COURSE_WRITE.getPermission())
+                .antMatchers(HttpMethod.GET, "/api/v1/students/**").hasAnyRole(ADMIN.name(), ADMIN_TRAINEE.name())
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -83,7 +84,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorities(ADMIN.getGrantedAuthority())
                 .build();
 
-        // todo for this user i get 403 forbidden for management controller api
         UserDetails tomUser = User.builder()
                 .username("tom")
                 .password(passwordEncoder.encode("password"))
@@ -91,6 +91,10 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorities(ADMIN_TRAINEE.getGrantedAuthority())
                 .build();
 
-        return new InMemoryUserDetailsManager(annaUser, lindaUser, tomUser);
+        return new InMemoryUserDetailsManager(
+                annaUser,
+                lindaUser,
+                tomUser
+        );
     }
 }
